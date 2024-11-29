@@ -1,1 +1,1 @@
-# Fight Architecht - Project Inside Out
+# Fight Architecht
