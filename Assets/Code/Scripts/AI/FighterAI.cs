@@ -11,31 +11,43 @@ public class FighterAI : MonoBehaviour
     }
 
 
-
+    [SerializeField] private int fighterID;
+    [SerializeField] private MatchStats matchStats;
     [SerializeField] private AIState currentState;
     [SerializeField] private Transform opponent;
-    [SerializeField] private FighterStats fighterStats;
-    private float lastAttackTime;
+    public FighterStats fighterStats;
 
-    public float attackSpeed { get; private set; }
-    public float strength { get; private set; }
-    public float dodgeRate { get; private set; }
-    public float attackCooldown { get; private set; }
-    public float currentHealth {get; private set; }
-    public float maxHealth { get; private set; }
-    public float defense {get; private set; }
+    private float lastAttackTime;
+    private float lastBlockTime;
+    private float lastDodgeTime;
+    private float stateChangeTime;
+    private float stateChangeInterval = 2.0f;
+    private float blockDuration = 3.0f; 
+    private float blockStartTime;
+    private float dodgeDuration = 0.4f;
+
+    public float attackSpeed;
+    public float strength;
+    public float dodgeRate;
+    public float attackCooldown;
+    public float currentHealth;
+    public float maxHealth;
+    public float defense;
 
     public bool isAttacking;
     public bool isDodging;
     public bool isBlocking;
 
     [SerializeField] private Animator animator;
-    
+
     [SerializeField] private MatchManager matchManager;
     [SerializeField] private HealthSystem healthSystem;
+
+    
     
     private void Start()
     {
+        if (fighterStats == null) return;
         if (healthSystem != null)
         {
             healthSystem.SetMaxHealth(fighterStats.health);
@@ -48,97 +60,98 @@ public class FighterAI : MonoBehaviour
         currentHealth = maxHealth;
         defense = fighterStats.defense;
         attackCooldown = fighterStats.attackCooldown;
+        stateChangeTime = Time.time;
     }
+    
 
-    
-    
     private void Update()
     {
-        if (matchManager == null) return;
-        if (!matchManager.isMatchRunning()) return;
-        
-        EvaluateState();
+        if (matchManager == null || !matchManager.isMatchRunning()) return;
+
+        if (isBlocking && Time.time - blockStartTime > blockDuration)
+        {
+            EndBlock();
+        }
+
+        if (isDodging && Time.time - lastDodgeTime > dodgeDuration)
+        {
+            EndDodge();
+        }
+
+        if (Time.time - stateChangeTime >= stateChangeInterval)
+        {
+            ChangeRandomState();
+            stateChangeTime = Time.time;
+        }
+
+        ActBasedOnState();
+    }
+    
+    
+    private void ChangeRandomState()
+    {
+        currentState = (AIState)Random.Range(0, 3);
+        Debug.Log($"Fighter {fighterID} switched to {currentState} state.");
+    }
+    
+    
+    private void ActBasedOnState()
+    {
         switch (currentState)
         {
             case AIState.Aggressive:
-                MoveTowardsOpponent();
                 if (isInRange()) Attack();
+                else MoveTowardsOpponent();
                 break;
+
             case AIState.Defensive:
                 if (isInRange())
                 {
                     if (Random.value > 0.5f) Attack();
                     else Block();
                 }
-                else
-                {
-                    MoveAwayFromOpponent();
-                }
+                else MoveAwayFromOpponent();
                 break;
+
             case AIState.Balanced:
-                if (Random.value > 0.33f) MoveTowardsOpponent();
-                else if (Random.value > 0.5f) Attack();
-                else Block();
+                ActBalanced();
                 break;
         }
     }
-
-
-    private void EvaluateState()
-    { float healthRatio = currentHealth / maxHealth;
-        float opponentHealthRatio = opponent.GetComponent<FighterAI>().currentHealth / opponent.GetComponent<FighterAI>().maxHealth;
-        float distanceToOpponent = Vector3.Distance(transform.position, opponent.position);
-
-
-        if (healthRatio < 0.3f)
+    
+    private void ActBalanced()
+    {
+        if (isInRange())
         {
-            if (distanceToOpponent < 1.0f && Random.value > 0.5f)
-            {
-                ChangeState(AIState.Aggressive);
-            }
-            else
-            {
-                ChangeState(AIState.Defensive);
-            }
-        }
-        else if (healthRatio > 0.7f)
-        {
-            if (opponentHealthRatio < 0.3f)
-            {
-                ChangeState(AIState.Aggressive);
-            }
-            else
-            {
-                ChangeState(AIState.Balanced);
-            }
+            float actionChance = Random.value;
+            if (actionChance < 0.5f) Attack(); 
+            else if (actionChance < 0.8f) Dodge(); 
+            else Block(); 
         }
         else
         {
-            if (distanceToOpponent < 1.0f)
-            {
-                ChangeState(AIState.Defensive);
-            }
-            else
-            {
-                ChangeState(AIState.Balanced);
-            }
+            if (Random.value < 0.7f) MoveTowardsOpponent(); 
+            else Dodge(); 
         }
     }
-
+    
     private void MoveTowardsOpponent()
     {
         if (isInRange()) return;
         transform.rotation = Quaternion.LookRotation(opponent.position - transform.position);
-        Vector3 direction = (opponent.position - transform.position).normalized;
-        transform.position += direction * fighterStats.movementSpeed * Time.deltaTime;
+        transform.position += (opponent.position - transform.position).normalized * fighterStats.movementSpeed * Time.deltaTime;
     }
-    
+
     private void MoveAwayFromOpponent()
     {
         if (!isInRange()) return;
         transform.rotation = Quaternion.LookRotation(transform.position - opponent.position);
-        Vector3 direction = (transform.position - opponent.position).normalized;
-        transform.position += direction * fighterStats.movementSpeed * Time.deltaTime;
+        transform.position += (transform.position - opponent.position).normalized * fighterStats.movementSpeed * Time.deltaTime;
+    }
+
+    private bool isInRange()
+    {
+        return Vector3.Distance(transform.position, opponent.position) < 0.5f;
     }
 
     public void SetHealth(float health)
@@ -147,17 +160,15 @@ public class FighterAI : MonoBehaviour
         healthSystem.UpdateHealth(currentHealth);
     }
     
-    private bool isInRange()
-    {
-        return Vector3.Distance(transform.position, opponent.position) < 0.5f;
-    }
-
     public void Attack()
     {
+        
         if (Time.time - lastAttackTime < attackCooldown || isDodging || isBlocking) return;
         isAttacking = true;
         animator.SetTrigger("Attack");
+        matchStats.LogHit(fighterID, (int)strength);
         lastAttackTime = Time.time;
+        Debug.Log($"Fighter {fighterID} is attacking.");
     }
 
     public void StartAttack()
@@ -170,19 +181,40 @@ public class FighterAI : MonoBehaviour
         isAttacking = false;
     }
 
+    public void Block()
+    {
+        if (isBlocking || Time.time - lastBlockTime < 2.0f) return;
+        isBlocking = true;
+        animator.SetBool("Block", true);
+        lastBlockTime = Time.time;
+        blockStartTime = Time.time;
+        matchStats.LogDefense(fighterID, true); // Log successful defense
+        Debug.Log($"Fighter {fighterID} is blocking.");
+    }
+
+    
     public void EndBlock()
     {
         isBlocking = false;
         animator.SetBool("Block", false);
-    }
-    
-    public void Block()
-    {
-        if (isAttacking) return;
-        isBlocking = true;
-        animator.SetBool("Block", true);
+        Debug.Log($"Fighter {fighterID} stopped blocking.");
     }
 
+    public void Dodge()
+    {
+        if (isDodging || Time.time - lastDodgeTime < 2.0f) return;
+        isDodging = true;
+        animator.SetTrigger("Dodge");
+        lastDodgeTime = Time.time;
+        Debug.Log($"Fighter {fighterID} dodged.");
+    }
+
+    public void EndDodge()
+    {
+        isDodging = false;
+        Debug.Log($"Fighter {fighterID} finished dodging.");
+    }
+    
     public void TakeDamage(float damage)
     {
         if (isBlocking)
@@ -192,13 +224,16 @@ public class FighterAI : MonoBehaviour
         }
 
         currentHealth -= damage;
+
+        if (currentHealth <= 0)
+        {
+            currentHealth = 0;
+            matchManager.EndMatch();
+            Debug.Log($"Fighter {fighterID} has been defeated.");
+        }
+
         healthSystem.UpdateHealth(currentHealth);
         EndBlock();
     }
-    
-    
-    public void ChangeState(AIState newState)
-    {
-        currentState = newState;
-    }
 }
+

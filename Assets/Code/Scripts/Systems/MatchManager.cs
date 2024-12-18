@@ -10,7 +10,9 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private Transform playerSpawn;
     [SerializeField] private Transform opponentSpawn;
     [SerializeField] private TextMeshProUGUI matchDurationText;
-    
+    [SerializeField] private MatchStats matchStats;
+    [SerializeField] private FeedBackSystem feedBackSystem;
+        
     public bool matchRunning = false;
     private bool isPaused = false;
     private bool isSpedUp = false;
@@ -106,6 +108,9 @@ public class MatchManager : MonoBehaviour
 
         matchDuration = 60f;
 
+        matchStats.ResetStats();
+        feedBackSystem.ClearFeedback();
+        
         Debug.Log("Match has been reset!");
     }
 
@@ -133,6 +138,8 @@ public void EndMatch()
     {
         Debug.Log("Match has ended in a draw!");
     }
-
+    
+    feedBackSystem.DisplayFeedback();
+    
     }
 }
