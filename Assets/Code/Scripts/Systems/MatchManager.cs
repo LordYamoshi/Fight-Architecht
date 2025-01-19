@@ -117,28 +117,17 @@ public class MatchManager : MonoBehaviour
 public void EndMatch()
 {
     matchRunning = false;
-    Time.timeScale = 0;
-    startButton.interactable = true;
-    isPaused = false;
-    isSpedUp = false;
-
-    if (player.currentHealth <= 0)
-    {
-        player.GetComponent<Animator>().SetBool("Die", true);
-        Debug.Log("Player has been defeated!");
-    }
-
-    if (opponent.currentHealth <= 0)
-    {
-        opponent.GetComponent<Animator>().SetBool("Die", true);
-        Debug.Log("Opponent has been defeated!");
-    }
-
+    
     if (player.currentHealth <= 0 && opponent.currentHealth <= 0)
     {
         Debug.Log("Match has ended in a draw!");
     }
     
+    Time.timeScale = 0;
+    startButton.interactable = true;
+    isPaused = false;
+    isSpedUp = false;
+
     feedBackSystem.DisplayFeedback();
     
     }

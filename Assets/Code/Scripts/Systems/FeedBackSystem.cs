@@ -40,77 +40,77 @@ public class FeedBackSystem : MonoBehaviour
         if (playerStats.movementSpeed > opponentStats.movementSpeed * 1.5f)
         {
             imbalances.Add(
-                "Player’s speed is significantly higher than Opponent’s. Consider reducing speed by 10% to balance the match.",
+                "Player’s Agility is significantly higher than Opponent’s. Consider reducing Agility by 10% to balance the match.",
                 1);
         }
         else if (opponentStats.movementSpeed > playerStats.movementSpeed * 1.5f)
         {
             imbalances.Add(
-                "Opponent’s speed is significantly higher than Player’s. Consider increasing Player’s speed by 10% to balance the match.",
+                "Opponent’s Agility is significantly higher than Player’s. Consider increasing Player’s Agility by 10% to balance the match.",
                 1);
         }
 
         if (player.strength > opponentStats.strength * 1.5f)
         {
             imbalances.Add(
-                "Player’s strength is significantly higher than Opponent’s. Consider reducing strength by 10% to ensure fair play.",
+                "Player’s Strength is significantly higher than Opponent’s. Consider reducing Strength by 10% to ensure fair play.",
                 2);
         }
         else if (opponentStats.strength > player.strength * 1.5f)
         {
             imbalances.Add(
-                "Opponent’s strength is significantly higher than Player’s. Consider increasing Player’s strength by 10% to ensure fair play.",
+                "Opponent’s Strength is significantly higher than Player’s. Consider increasing Player’s Strength by 10% to ensure fair play.",
                 2);
         }
 
         if (player.defense > opponentStats.defense * 1.5f)
         {
             imbalances.Add(
-                "Player’s defense is significantly higher than Opponent’s. Consider reducing defense by 10% to create openings.",
+                "Player’s Defense is significantly higher than Opponent’s. Consider reducing Defense by 10% to create openings.",
                 3);
         }
         else if (opponentStats.defense > player.defense * 1.5f)
         {
             imbalances.Add(
-                "Opponent’s defense is significantly higher than Player’s. Consider increasing Player’s defense by 10% to create openings.",
+                "Opponent’s Defense is significantly higher than Player’s. Consider increasing Player’s Defense by 10% to create openings.",
                 3);
         }
 
         if (player.dodgeRate > opponentStats.dodgeRate * 2f)
         {
             imbalances.Add(
-                "Player’s dodge rate is excessively high. Consider reducing dodge rate by 15% to give Opponent a chance.",
+                "Player’s Dodge is excessively high. Consider reducing Dodge by 15% to give Opponent a chance.",
                 4);
         }
         else if (opponentStats.dodgeRate > player.dodgeRate * 2f)
         {
             imbalances.Add(
-                "Opponent’s dodge rate is excessively high. Consider increasing Player’s dodge rate by 15% to give Player a chance.",
+                "Opponent’s Dodge is excessively high. Consider increasing Player’s Dodge  by 15% to give Player a chance.",
                 4);
         }
 
         if (player.attackSpeed > opponentStats.attackSpeed * 1.5f)
         {
             imbalances.Add(
-                "Player’s attack speed is significantly higher. Consider reducing Player’s speed by 10% to balance exchanges.",
+                "Player’s Dexterity is significantly higher. Consider reducing Player’s Dexterity by 10% to balance exchanges.",
                 5);
         }
         else if (opponentStats.attackSpeed > player.attackSpeed * 1.5f)
         {
             imbalances.Add(
-                "Opponent’s attack speed is significantly higher. Consider increasing Player’s attack speed by 10% to balance exchanges.",
+                "Opponent’s Dexterity is significantly higher. Consider increasing Player’s Dexterity by 10% to balance exchanges.",
                 5);
         }
 
         if (player.maxHealth > opponentStats.health * 1.5f)
         {
             imbalances.Add(
-                "Player’s health is disproportionately higher than Opponent’s. Consider reducing health by 15%.", 6);
+                "Player’s Vigor is disproportionately higher than Opponent’s. Consider reducing Vigor by 15%.", 6);
         }
         else if (opponentStats.health > player.maxHealth * 1.5f)
         {
             imbalances.Add(
-                "Opponent’s health is disproportionately higher than Player’s. Consider increasing Player’s health by 15%.",
+                "Opponent’s Vigor is disproportionately higher than Player’s. Consider increasing Player’s Vigor by 15%.",
                 6);
         }
 
