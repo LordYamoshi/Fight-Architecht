@@ -12,6 +12,8 @@ public class FeedBackSystem : MonoBehaviour
     [SerializeField] private FighterAI player;
     [SerializeField] private FighterAI opponent;
 
+    [SerializeField] private List<BalanceParameters> balanceParameters = new List<BalanceParameters>();
+    
     private void Start()
     {
         matchStats = FindObjectOfType<MatchStats>();
@@ -31,109 +33,54 @@ public class FeedBackSystem : MonoBehaviour
 
     private string HighlightImbalances()
     {
-        string suggestions = "";
-        FighterStats playerStats = player.fighterStats;
-        FighterStats opponentStats = opponent.fighterStats;
-
         Dictionary<string, int> imbalances = new Dictionary<string, int>();
-
-        if (playerStats.movementSpeed > opponentStats.movementSpeed * 1.5f)
+    
+        //Loops through all balance parameters and checks for imbalances
+        foreach (var balanceParameter in balanceParameters)
         {
-            imbalances.Add(
-                "Player’s Agility is significantly higher than Opponent’s. Consider reducing Agility by 10% to balance the match.",
-                1);
-        }
-        else if (opponentStats.movementSpeed > playerStats.movementSpeed * 1.5f)
-        {
-            imbalances.Add(
-                "Opponent’s Agility is significantly higher than Player’s. Consider increasing Player’s Agility by 10% to balance the match.",
-                1);
-        }
-
-        if (player.strength > opponentStats.strength * 1.5f)
-        {
-            imbalances.Add(
-                "Player’s Strength is significantly higher than Opponent’s. Consider reducing Strength by 10% to ensure fair play.",
-                2);
-        }
-        else if (opponentStats.strength > player.strength * 1.5f)
-        {
-            imbalances.Add(
-                "Opponent’s Strength is significantly higher than Player’s. Consider increasing Player’s Strength by 10% to ensure fair play.",
-                2);
+            float playerValue = GetStatValue(player, balanceParameter.statName);
+            float opponentValue = GetStatValue(opponent, balanceParameter.statName);
+        
+            string message;
+            if (balanceParameter.CheckImbalance(playerValue, opponentValue, out message))
+            {
+                imbalances.Add(message, balanceParameter.priority);
+            }
         }
 
-        if (player.defense > opponentStats.defense * 1.5f)
-        {
-            imbalances.Add(
-                "Player’s Defense is significantly higher than Opponent’s. Consider reducing Defense by 10% to create openings.",
-                3);
-        }
-        else if (opponentStats.defense > player.defense * 1.5f)
-        {
-            imbalances.Add(
-                "Opponent’s Defense is significantly higher than Player’s. Consider increasing Player’s Defense by 10% to create openings.",
-                3);
-        }
-
-        if (player.dodgeRate > opponentStats.dodgeRate * 2f)
-        {
-            imbalances.Add(
-                "Player’s Dodge is excessively high. Consider reducing Dodge by 15% to give Opponent a chance.",
-                4);
-        }
-        else if (opponentStats.dodgeRate > player.dodgeRate * 2f)
-        {
-            imbalances.Add(
-                "Opponent’s Dodge is excessively high. Consider increasing Player’s Dodge  by 15% to give Player a chance.",
-                4);
-        }
-
-        if (player.attackSpeed > opponentStats.attackSpeed * 1.5f)
-        {
-            imbalances.Add(
-                "Player’s Dexterity is significantly higher. Consider reducing Player’s Dexterity by 10% to balance exchanges.",
-                5);
-        }
-        else if (opponentStats.attackSpeed > player.attackSpeed * 1.5f)
-        {
-            imbalances.Add(
-                "Opponent’s Dexterity is significantly higher. Consider increasing Player’s Dexterity by 10% to balance exchanges.",
-                5);
-        }
-
-        if (player.maxHealth > opponentStats.health * 1.5f)
-        {
-            imbalances.Add(
-                "Player’s Vigor is disproportionately higher than Opponent’s. Consider reducing Vigor by 15%.", 6);
-        }
-        else if (opponentStats.health > player.maxHealth * 1.5f)
-        {
-            imbalances.Add(
-                "Opponent’s Vigor is disproportionately higher than Player’s. Consider increasing Player’s Vigor by 15%.",
-                6);
-        }
-
-        if (player.attackCooldown < opponentStats.attackCooldown * 0.5f)
-        {
-            imbalances.Add(
-                "Player’s attack cooldown is much shorter. Consider increasing cooldown by 10% to level the playing field.",
-                7);
-        }
-        else if (opponentStats.attackCooldown < player.attackCooldown * 0.5f)
-        {
-            imbalances.Add(
-                "Opponent’s attack cooldown is much shorter. Consider increasing Player’s cooldown by 10% to level the playing field.",
-                7);
-        }
-
+        // Get highest priority message if any
         if (imbalances.Count > 0)
         {
             var highestPriority = imbalances.OrderByDescending(i => i.Value).First();
-            suggestions = highestPriority.Key;
+            return highestPriority.Key;
         }
 
-        return string.IsNullOrEmpty(suggestions) ? "Stats are well balanced." : suggestions;
+        return "Stats are well balanced.";
+    }
+    
+    private float GetStatValue(FighterAI fighter, string statName)
+    {
+        switch (statName.ToLower())
+        {
+            case "movementspeed":
+                return fighter.fighterStats.movementSpeed;
+            case "strength":
+                return fighter.strength;
+            case "defense":
+                return fighter.defense;
+            case "dodgerate":
+                return fighter.dodgeRate;
+            case "attackspeed":
+                return fighter.attackSpeed;
+            case "health":
+            case "maxhealth":
+                return fighter.maxHealth;
+            case "attackcooldown":
+                return fighter.fighterStats.attackCooldown;
+            default:
+                Debug.Log($"Unknown stat name: {statName}");
+                return 0f;
+        }
     }
 
     public void DisplayCurrentStats(FighterAI fighter)

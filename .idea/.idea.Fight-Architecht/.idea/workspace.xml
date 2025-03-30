@@ -5,13 +5,42 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2501181b-f154-4fa0-99b6-fc2fa616a40a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/AIBrains.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Code/Scripts/AI/TrainingManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Code/Scripts/AI/TrainingManager.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/BalanceParameters.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/BalanceParameters.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/AgilityGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/AgilityGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/AttackCooldownGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/AttackCooldownGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/AttackSpeedGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/AttackSpeedGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/DefenseGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/DefenseGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/DodgerRateGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/DodgerRateGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/HealthGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/HealthGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/StrengthGreater.asset" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/Data/BalanceData/StrengthGreater.asset.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/ML-Agents.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/ML-Agents/Timers.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/ML-Agents/Timers/TestingFight_timers.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assets/ML-Agents/Timers/TestingFight_timers.json.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fighter_config.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Fight-Architecht/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Fight-Architecht/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains/BrainV0.onnx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains/BrainV0.onnx.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains/BrainV1.onnx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains/BrainV1.onnx.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/AI/FighterAI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/AI/FighterAI.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Hitbox/HitBox.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Hitbox/HitBox.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Managers/CustomizationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Managers/CustomizationManager.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/FeedBackSystem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/FeedBackSystem.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/MatchManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/MatchManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/MatchManager.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/MatchManager.cs.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/UI/CustomizationUI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/UI/CustomizationUI.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Data/FighterData/FighterA.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Data/FighterData/FighterA.asset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/Testing/TestingFight.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Testing/TestingFight.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
@@ -32,13 +61,13 @@
     <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/Hitbox/HitBox.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/Managers/CustomizationManager.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/FighterStats.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/MatchSettings.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/Systems/FeedBackSystem.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/Systems/HealthSystem.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Code/Scripts/UI/CustomizationUI.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Code/Utilities/EasingFunctions.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.collab-proxy/Editor/ViewSwitcher.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.ml-agents/Runtime/Actuators/ActionSegment.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.ml-agents/Runtime/DecisionRequester.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.ml-agents/Runtime/Sensors/VectorSensor.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProblemsViewState">
@@ -139,6 +168,8 @@
       <workItem from="1740059156095" duration="1505000" />
       <workItem from="1740061616132" duration="6659000" />
       <workItem from="1741636061887" duration="11232000" />
+      <workItem from="1743328128418" duration="9322000" />
+      <workItem from="1743339009727" duration="10350000" />
     </task>
     <servers />
   </component>

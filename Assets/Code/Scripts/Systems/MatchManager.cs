@@ -12,23 +12,24 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI matchDurationText;
     [SerializeField] private MatchStats matchStats;
     [SerializeField] private FeedBackSystem feedBackSystem;
-        
+
     public bool matchRunning = false;
     private bool isPaused = false;
     private bool isSpedUp = false;
-    
+
     [SerializeField] private float matchDuration = 60f;
     [SerializeField] private Button startButton;
-    
-    
-    
+    [SerializeField] private bool isInTrainingMode = false;
+
+
+
     private void Update()
     {
         if (!matchRunning) return;
 
         matchDuration -= Time.deltaTime;
         matchDurationText.text = $"{Mathf.CeilToInt(matchDuration)}";
-        
+
         if (matchDuration <= 0 || player.currentHealth <= 0 || opponent.currentHealth <= 0)
         {
             EndMatch();
@@ -38,7 +39,7 @@ public class MatchManager : MonoBehaviour
     public void StartMatch()
     {
         if (matchRunning) return;
-        
+
         ResetMatch();
         startButton.interactable = false;
         matchRunning = true;
@@ -49,17 +50,17 @@ public class MatchManager : MonoBehaviour
 
     public void SpeedUpMatch()
     {
-        if (!matchRunning) return; 
+        if (!matchRunning) return;
 
         if (isSpedUp)
         {
-            Time.timeScale = 1f; 
+            Time.timeScale = 1f;
             isSpedUp = false;
             Debug.Log("Match speed reset to normal!");
         }
         else
         {
-            Time.timeScale = 2f; 
+            Time.timeScale = 2f;
             isSpedUp = true;
             Debug.Log("Match sped up!");
         }
@@ -68,7 +69,7 @@ public class MatchManager : MonoBehaviour
 
     public void PauseMatch()
     {
-        if (!matchRunning) return; 
+        if (!matchRunning) return;
 
         if (isPaused)
         {
@@ -83,26 +84,27 @@ public class MatchManager : MonoBehaviour
             Debug.Log("Match paused!");
         }
     }
+
     public void ReplayMatch()
     {
         ResetMatch();
         Debug.Log("Match Restarted!");
     }
-    
+
     public bool isMatchRunning()
     {
         return matchRunning;
     }
 
-    private void ResetMatch()
+    public void ResetMatch()
     {
         player.SetHealth(player.maxHealth);
         opponent.SetHealth(opponent.maxHealth);
-        
+
 
         isPaused = false;
         isSpedUp = false;
-        
+
         player.transform.position = playerSpawn.position;
         opponent.transform.position = opponentSpawn.position;
 
@@ -110,25 +112,60 @@ public class MatchManager : MonoBehaviour
 
         matchStats.ResetStats();
         feedBackSystem.ClearFeedback();
-        
+
         Debug.Log("Match has been reset!");
     }
 
-public void EndMatch()
-{
-    matchRunning = false;
-    
-    if (player.currentHealth <= 0 && opponent.currentHealth <= 0)
+    public void SetTrainingMode(bool trainingMode)
     {
-        Debug.Log("Match has ended in a draw!");
+        isInTrainingMode = trainingMode;
     }
-    
-    Time.timeScale = 0;
-    startButton.interactable = true;
-    isPaused = false;
-    isSpedUp = false;
 
-    feedBackSystem.DisplayFeedback();
-    
+
+    public void EndMatch()
+    {
+        matchRunning = false;
+
+        // Determine winner for rewards
+        FighterAI winner = null;
+
+        if (player.currentHealth > opponent.currentHealth)
+        {
+            winner = player;
+            player.CompleteEpisode(true);
+            opponent.CompleteEpisode(false);
+        }
+        else if (opponent.currentHealth > player.currentHealth)
+        {
+            winner = opponent;
+            opponent.CompleteEpisode(true);
+            player.CompleteEpisode(false); 
+        }
+        else
+        {
+            // Draw - both get small negative reward
+            player.CompleteEpisode(false);
+            opponent.CompleteEpisode(false);
+        }
+
+        // Handle differently based on mode
+        if (isInTrainingMode)
+        {
+            // Keep time running in training mode
+            Time.timeScale = 1.0f;
+        }
+        else
+        {
+            // Pause in regular gameplay mode
+            Time.timeScale = 0f;
+            startButton.interactable = true;
+        }
+
+        isPaused = false;
+        isSpedUp = false;
+
+        // Display feedback
+        if (feedBackSystem != null)
+            feedBackSystem.DisplayFeedback();
     }
 }

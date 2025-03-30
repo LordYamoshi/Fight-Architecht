@@ -16,6 +16,6 @@ MonoBehaviour:
   attackSpeed: 2
   attackCooldown: 0.3
   dodgeRate: 0.02
-  movementSpeed: 5
+  movementSpeed: 3
   health: 100
   defense: 2

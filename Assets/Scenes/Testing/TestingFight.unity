@@ -427,6 +427,8 @@ GameObject:
   - component: {fileID: 75170207}
   - component: {fileID: 75170206}
   - component: {fileID: 75170208}
+  - component: {fileID: 75170209}
+  - component: {fileID: 75170211}
   m_Layer: 6
   m_Name: FighterA
   m_TagString: Untagged
@@ -484,10 +486,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6c870d1ce1310e478e18124c7c33af6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 100000
   fighterID: 1
-  matchStats: {fileID: 387504160}
-  currentState: 0
   opponent: {fileID: 8405673746225622134}
+  trainingManager: {fileID: 1785096370}
+  matchManager: {fileID: 2103793168}
+  healthSystem: {fileID: 296810985}
+  animator: {fileID: 75170208}
+  matchStats: {fileID: 387504160}
   fighterStats: {fileID: 11400000, guid: 1ec2531d43ddce64cb03ac7a81e52799, type: 2}
   attackSpeed: 0
   strength: 0
@@ -496,12 +505,27 @@ MonoBehaviour:
   currentHealth: 0
   maxHealth: 0
   defense: 0
+  arenaMinX: -5
+  arenaMaxX: 5
+  boundsCheckBuffer: 0.2
+  minimumFightingDistance: 1.5
+  optimalFightingDistance: 1
+  successfulHitReward: 0.5
+  successfulBlockReward: 0.2
+  successfulDodgeReward: 0.3
+  takeDamagePenalty: 0.1
+  boundaryPenalty: 0.05
+  victoryReward: 5
+  defeatPenalty: 0.5
+  smallActionReward: 0.01
+  proximityReward: 0.05
+  distancePenalty: 0.03
+  useEarlyTrainingBoost: 1
+  earlyTrainingSteps: 50000
+  earlyMovementBoost: 1.5
   isAttacking: 0
   isDodging: 0
   isBlocking: 0
-  animator: {fileID: 75170208}
-  matchManager: {fileID: 2103793168}
-  healthSystem: {fileID: 296810985}
 --- !u!54 &75170207
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -551,6 +575,52 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &75170209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 75170203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BrainParameters:
+    VectorObservationSize: 17
+    NumStackedVectorObservations: 4
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 0400000003000000
+    VectorActionSize: 0400000003000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 5022602860645237092, guid: 9a19660ffca494b47aff601114b353f7, type: 3}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: Fighter
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
+--- !u!114 &75170211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 75170203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 3
+  DecisionStep: 0
+  TakeActionsBetweenDecisions: 1
 --- !u!1 &87794735
 GameObject:
   m_ObjectHideFlags: 0
@@ -1213,70 +1283,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &286320788
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 286320789}
-  - component: {fileID: 286320790}
-  m_Layer: 0
-  m_Name: NavMesh
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &286320789
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 286320788}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.45930544, y: 2.1013255, z: -5.2413125}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &286320790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 286320788}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SerializedVersion: 0
-  m_AgentTypeID: 0
-  m_CollectObjects: 0
-  m_Size: {x: 10, y: 10, z: 10}
-  m_Center: {x: 0, y: 2, z: 0}
-  m_LayerMask:
-    serializedVersion: 2
-    m_Bits: 8
-  m_UseGeometry: 0
-  m_DefaultArea: 0
-  m_GenerateLinks: 1
-  m_IgnoreNavMeshAgent: 1
-  m_IgnoreNavMeshObstacle: 1
-  m_OverrideTileSize: 0
-  m_TileSize: 256
-  m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.16666667
-  m_MinRegionArea: 2
-  m_NavMeshData: {fileID: 23800000, guid: 89fd1df08cdc0604788160a29d4bf9b8, type: 2}
-  m_BuildHeightMesh: 0
 --- !u!1 &286771444
 GameObject:
   m_ObjectHideFlags: 0
@@ -2375,6 +2381,14 @@ MonoBehaviour:
   feedbackText: {fileID: 1991788634}
   player: {fileID: 75170206}
   opponent: {fileID: 9218062564849268431}
+  balanceParameters:
+  - {fileID: 11400000, guid: a0b7f57fa6fdde14d87eb11c25b75d90, type: 2}
+  - {fileID: 11400000, guid: 670d74a7606d92343a3fdad0450e2350, type: 2}
+  - {fileID: 11400000, guid: f770265bfbdf9684098d5df49836b3a4, type: 2}
+  - {fileID: 11400000, guid: d2370f3cd9525654cb2081f9d8018406, type: 2}
+  - {fileID: 11400000, guid: 731f1d2335834414a8a49a224eeba848, type: 2}
+  - {fileID: 11400000, guid: a14c7d2ee81db654488d09c727065506, type: 2}
+  - {fileID: 11400000, guid: 0c733b519a9416547bc64bc405d8d793, type: 2}
 --- !u!114 &387504160
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3743,6 +3757,7 @@ RectTransform:
   - {fileID: 554142565}
   - {fileID: 1251643433}
   - {fileID: 2044006595}
+  - {fileID: 1017235656}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6074,6 +6089,142 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1003529135}
+  m_CullTransparentMesh: 1
+--- !u!1 &1017235655
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1017235656}
+  - component: {fileID: 1017235658}
+  - component: {fileID: 1017235657}
+  m_Layer: 5
+  m_Name: EpisodeTrainingDataText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1017235656
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1017235655}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 654576457}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 290, y: -85}
+  m_SizeDelta: {x: 200, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1017235657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1017235655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 'Episode : 1'
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
+  m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 26.9
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 5
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1017235658
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1017235655}
   m_CullTransparentMesh: 1
 --- !u!1 &1022126310
 GameObject:
@@ -10045,6 +10196,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773214766}
   m_CullTransparentMesh: 1
+--- !u!1 &1785096369
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1785096371}
+  - component: {fileID: 1785096370}
+  m_Layer: 0
+  m_Name: TrainingManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1785096370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1785096369}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06f6a663d9f4b244ebe935b205cb78d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  matchManager: {fileID: 2103793168}
+  playerAgent: {fileID: 75170206}
+  opponentAgent: {fileID: 9218062564849268431}
+  episodeText: {fileID: 1017235657}
+  maxEpisodeLength: 60
+  episodeResetDelay: 0.5
+  trainingTimeScale: 1
+  showDebugLogs: 1
+--- !u!4 &1785096371
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1785096369}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.14359128, y: 0.6173487, z: -3.2948165}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1786276532
 GameObject:
   m_ObjectHideFlags: 0
@@ -11359,6 +11562,7 @@ MonoBehaviour:
   matchRunning: 0
   matchDuration: 60
   startButton: {fileID: 1465804330}
+  isInTrainingMode: 0
 --- !u!4 &2103793169
 Transform:
   m_ObjectHideFlags: 0
@@ -13988,6 +14192,8 @@ GameObject:
   - component: {fileID: 9218062564849268430}
   - component: {fileID: 9218062564849268431}
   - component: {fileID: 9218062564849268432}
+  - component: {fileID: 9218062564849268433}
+  - component: {fileID: 9218062564849268434}
   m_Layer: 6
   m_Name: FighterB
   m_TagString: Untagged
@@ -14055,10 +14261,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6c870d1ce1310e478e18124c7c33af6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 100000
   fighterID: 2
-  matchStats: {fileID: 387504160}
-  currentState: 0
   opponent: {fileID: 75170204}
+  trainingManager: {fileID: 1785096370}
+  matchManager: {fileID: 2103793168}
+  healthSystem: {fileID: 1069507286}
+  animator: {fileID: 9218062564849268432}
+  matchStats: {fileID: 387504160}
   fighterStats: {fileID: 11400000, guid: 0dddddf602ad5134eb92de93eca3d40f, type: 2}
   attackSpeed: 0
   strength: 0
@@ -14067,12 +14280,27 @@ MonoBehaviour:
   currentHealth: 0
   maxHealth: 0
   defense: 0
+  arenaMinX: -5
+  arenaMaxX: 5
+  boundsCheckBuffer: 0.2
+  minimumFightingDistance: 1.5
+  optimalFightingDistance: 1
+  successfulHitReward: 0.5
+  successfulBlockReward: 0.2
+  successfulDodgeReward: 0.3
+  takeDamagePenalty: 0.1
+  boundaryPenalty: 0.05
+  victoryReward: 5
+  defeatPenalty: 0.5
+  smallActionReward: 0.01
+  proximityReward: 0.05
+  distancePenalty: 0.03
+  useEarlyTrainingBoost: 1
+  earlyTrainingSteps: 50000
+  earlyMovementBoost: 1.5
   isAttacking: 0
   isDodging: 0
   isBlocking: 0
-  animator: {fileID: 9218062564849268432}
-  matchManager: {fileID: 2103793168}
-  healthSystem: {fileID: 1069507286}
 --- !u!95 &9218062564849268432
 Animator:
   serializedVersion: 7
@@ -14095,6 +14323,52 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &9218062564849268433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9218062564849268428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BrainParameters:
+    VectorObservationSize: 17
+    NumStackedVectorObservations: 4
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 0400000003000000
+    VectorActionSize: 0400000003000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 5022602860645237092, guid: 9a19660ffca494b47aff601114b353f7, type: 3}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: Fighter
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
+--- !u!114 &9218062564849268434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9218062564849268428}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 3
+  DecisionStep: 0
+  TakeActionsBetweenDecisions: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -14102,7 +14376,6 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 286320789}
   - {fileID: 663659665}
   - {fileID: 367068964}
   - {fileID: 2103793169}
@@ -14110,3 +14383,4 @@ SceneRoots:
   - {fileID: 1458841607}
   - {fileID: 387504161}
   - {fileID: 1304550824}
+  - {fileID: 1785096371}
