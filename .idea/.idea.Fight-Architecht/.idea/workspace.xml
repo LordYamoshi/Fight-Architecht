@@ -4,25 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2501181b-f154-4fa0-99b6-fc2fa616a40a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Fight-Architecht/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Fight-Architecht/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains/Fighter.onnx" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/AIBrains/FighterBrains/Fighter.onnx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/AI/FighterAI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/AI/FighterAI.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/AI/TrainingManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/AI/TrainingManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Hitbox/HitBox.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Hitbox/HitBox.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Managers/CustomizationManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Managers/CustomizationManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/BalanceParameters.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/BalanceParameters.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/FighterStats.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/ScriptableObjects/FighterStats.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/FeedBackSystem.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/FeedBackSystem.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/MatchManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/Systems/MatchManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Code/Scripts/UI/CustomizationUI.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Code/Scripts/UI/CustomizationUI.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/ML-Agents/Timers/TestingFight_timers.json" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/ML-Agents/Timers/TestingFight_timers.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Testing/TestingFight.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Testing/TestingFight.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" beforeDir="false" afterPath="$PROJECT_DIR$/UserSettings/Layouts/default-6000.dwlt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fighter_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/fighter_config.yaml" afterDir="false" />
-    </list>
+    <list default="true" id="2501181b-f154-4fa0-99b6-fc2fa616a40a" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -154,7 +136,7 @@
       <workItem from="1743328128418" duration="9322000" />
       <workItem from="1743339009727" duration="10350000" />
       <workItem from="1743376498425" duration="5759000" />
-      <workItem from="1743688069501" duration="9003000" />
+      <workItem from="1743688069501" duration="9815000" />
     </task>
     <servers />
   </component>
