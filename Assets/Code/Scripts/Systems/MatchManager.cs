@@ -5,13 +5,18 @@ using UnityEngine.UI;
 
 public class MatchManager : MonoBehaviour
 {
-    [SerializeField] private FighterAI player;
-    [SerializeField] private FighterAI opponent;
+    [SerializeField] private GameObject playerObject;
+    [SerializeField] private GameObject opponentObject;
     [SerializeField] private Transform playerSpawn;
     [SerializeField] private Transform opponentSpawn;
     [SerializeField] private TextMeshProUGUI matchDurationText;
     [SerializeField] private MatchStats matchStats;
     [SerializeField] private FeedBackSystem feedBackSystem;
+
+    private FighterHealth playerHealth;
+    private FighterHealth opponentHealth;
+    private FighterAgent playerAgent;
+    private FighterAgent opponentAgent;
 
     public bool matchRunning = false;
     private bool isPaused = false;
@@ -21,7 +26,22 @@ public class MatchManager : MonoBehaviour
     [SerializeField] private Button startButton;
     [SerializeField] private bool isInTrainingMode = false;
 
+    [SerializeField] private float initialFighterDistance = 2.5f;
 
+    private void Awake()
+    {
+        if (playerObject != null)
+        {
+            playerHealth = playerObject.GetComponent<FighterHealth>();
+            playerAgent = playerObject.GetComponent<FighterAgent>();
+        }
+        
+        if (opponentObject != null)
+        {
+            opponentHealth = opponentObject.GetComponent<FighterHealth>();
+            opponentAgent = opponentObject.GetComponent<FighterAgent>();
+        }
+    }
 
     private void Update()
     {
@@ -30,7 +50,10 @@ public class MatchManager : MonoBehaviour
         matchDuration -= Time.deltaTime;
         matchDurationText.text = $"{Mathf.CeilToInt(matchDuration)}";
 
-        if (matchDuration <= 0 || player.currentHealth <= 0 || opponent.currentHealth <= 0)
+        bool playerDefeated = playerHealth != null && playerHealth.CurrentHealth <= 0;
+        bool opponentDefeated = opponentHealth != null && opponentHealth.CurrentHealth <= 0;
+
+        if (matchDuration <= 0 || playerDefeated || opponentDefeated)
         {
             EndMatch();
         }
@@ -46,7 +69,6 @@ public class MatchManager : MonoBehaviour
         Time.timeScale = 1;
         Debug.Log("Match has started!");
     }
-
 
     public void SpeedUpMatch()
     {
@@ -65,7 +87,6 @@ public class MatchManager : MonoBehaviour
             Debug.Log("Match sped up!");
         }
     }
-
 
     public void PauseMatch()
     {
@@ -98,20 +119,37 @@ public class MatchManager : MonoBehaviour
 
     public void ResetMatch()
     {
-        player.SetHealth(player.maxHealth);
-        opponent.SetHealth(opponent.maxHealth);
-
+        // Reset health
+        if (playerHealth != null)
+            playerHealth.ResetHealth();
+            
+        if (opponentHealth != null)
+            opponentHealth.ResetHealth();
 
         isPaused = false;
         isSpedUp = false;
 
-        player.transform.position = playerSpawn.position;
-        opponent.transform.position = opponentSpawn.position;
+        // Reset positions
+        if (playerObject != null && opponentObject != null && playerSpawn != null && opponentSpawn != null)
+        {
+            Vector3 midpoint = (playerSpawn.position + opponentSpawn.position) / 2;
+        
+            // Set positions closer to center
+            Vector3 playerPos = midpoint + new Vector3(-initialFighterDistance/2, 0, 0);
+            Vector3 opponentPos = midpoint + new Vector3(initialFighterDistance/2, 0, 0);
+        
+            // Keep original Y values
+            playerPos.y = playerSpawn.position.y;
+            opponentPos.y = opponentSpawn.position.y;
+        
+            playerObject.transform.position = playerPos;
+            opponentObject.transform.position = opponentPos;
+        }
 
         matchDuration = 60f;
 
-        matchStats.ResetStats();
-        feedBackSystem.ClearFeedback();
+        matchStats?.ResetStats();
+        feedBackSystem?.ClearFeedback();
 
         Debug.Log("Match has been reset!");
     }
@@ -121,31 +159,35 @@ public class MatchManager : MonoBehaviour
         isInTrainingMode = trainingMode;
     }
 
-
     public void EndMatch()
     {
         matchRunning = false;
 
         // Determine winner for rewards
-        FighterAI winner = null;
+        bool playerWon = false;
+        bool draw = false;
 
-        if (player.currentHealth > opponent.currentHealth)
+        if (playerHealth != null && opponentHealth != null)
         {
-            winner = player;
-            player.CompleteEpisode(true);
-            opponent.CompleteEpisode(false);
+            if (playerHealth.CurrentHealth > opponentHealth.CurrentHealth)
+            {
+                playerWon = true;
+            }
+            else if (playerHealth.CurrentHealth == opponentHealth.CurrentHealth)
+            {
+                draw = true;
+            }
         }
-        else if (opponent.currentHealth > player.currentHealth)
+
+        // Notify agents of results
+        if (playerAgent != null)
         {
-            winner = opponent;
-            opponent.CompleteEpisode(true);
-            player.CompleteEpisode(false); 
+            playerAgent.CompleteEpisode(playerWon);
         }
-        else
+        
+        if (opponentAgent != null)
         {
-            // Draw - both get small negative reward
-            player.CompleteEpisode(false);
-            opponent.CompleteEpisode(false);
+            opponentAgent.CompleteEpisode(!playerWon && !draw);
         }
 
         // Handle differently based on mode
@@ -165,7 +207,6 @@ public class MatchManager : MonoBehaviour
         isSpedUp = false;
 
         // Display feedback
-        if (feedBackSystem != null)
-            feedBackSystem.DisplayFeedback();
+        feedBackSystem?.DisplayFeedback();
     }
 }

@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using System.Collections.Generic;
 
 public class FighterAI : Agent
 {
@@ -22,35 +23,61 @@ public class FighterAI : Agent
     public float maxHealth;
     public float defense;
 
-    [Header("Arena Settings")]
-    [SerializeField] private float arenaMinX = -5f;
+    [Header("Arena Settings")] [SerializeField]
+    private float arenaMinX = -5f;
+
     [SerializeField] private float arenaMaxX = 5f;
     [SerializeField] private float boundsCheckBuffer = 0.2f;
-    [SerializeField] private float minimumFightingDistance = 1.0f; 
-    [SerializeField] private float optimalFightingDistance = 1.2f;
+    [SerializeField] private float minimumFightingDistance = 0.8f;
+    [SerializeField] private float optimalFightingDistance = 1.0f;
 
-    [Header("Reward Settings")]
-    [SerializeField] private float successfulHitReward = 0.5f;
-    [SerializeField] private float successfulBlockReward = 0.2f;
-    [SerializeField] private float successfulDodgeReward = 0.3f;
-    [SerializeField] private float takeDamagePenalty = 0.1f;
-    [SerializeField] private float boundaryPenalty = 0.05f;
+    [Header("Reward Settings")] [SerializeField]
+    private float successfulHitReward = 1f;
+
+    [SerializeField] private float successfulBlockReward = 0.5f;
+    [SerializeField] private float successfulDodgeReward = 0.5f;
+    [SerializeField] private float takeDamagePenalty = 0.01f;
+    [SerializeField] private float boundaryPenalty = 0.01f;
     [SerializeField] private float victoryReward = 5.0f;
     [SerializeField] private float defeatPenalty = 0.5f;
     [SerializeField] private float smallActionReward = 0.01f;
     [SerializeField] private float proximityReward = 0.05f;
-    [SerializeField] private float distancePenalty = 0.03f; 
 
-    [SerializeField] private float attackInitiationReward = 0.15f;  
+    [Header("Aggression Settings")] [SerializeField]
+    private float attackInitiationReward = 0.3f;
+
     [SerializeField] private float successfulHitMultiplier = 2.0f;
-    [SerializeField] private float damageReceivedPenaltyScale = 0.05f;
-    [SerializeField] private float distanceThreshold = 2.5f; 
-    [SerializeField] private float farPenaltyPerSecond = 0.5f;
-    
-    [Header("Early Training Boosters")]
-    [SerializeField] private bool useEarlyTrainingBoost = true;
+    [SerializeField] private float distanceThreshold = 2.5f;
+    [SerializeField] private float farPenaltyPerSecond = 0.05f;
+    [SerializeField] private float attackFrequencyCheckInterval = 5f;
+    [SerializeField] private float lowAttackRatePenalty = 0.1f;
+    [SerializeField] private float highAttackRateReward = 0.15f;
+
+    [Header("Forced Engagement")] [SerializeField]
+    private bool enableForcedEngagement = true;
+
+    [SerializeField] private int forcedEngagementSteps = 100000;
+    [SerializeField] private float forcedAttackChance = 0.1f;
+    [SerializeField] private float forcedApproachChance = 0.3f;
+
+    [Header("Push Force Settings")] [SerializeField]
+    private bool enablePushForce = true;
+
+    [SerializeField] private int pushForceSteps = 50000;
+    [SerializeField] private float pushForceStrength = 2.0f;
+    [SerializeField] private float minPushDistance = 3.0f;
+
+    [Header("Early Training Boosters")] [SerializeField]
+    private bool useEarlyTrainingBoost = true;
+
     [SerializeField] private int earlyTrainingSteps = 50000;
     [SerializeField] private float earlyMovementBoost = 1.5f;
+
+    private Vector3 targetPosition;
+    private Vector3 currentVelocity = Vector3.zero;
+    private float movementSmoothTime = 0.15f;
+    private float movementThreshold = 0.03f;
+    private bool isMoving = false;
 
     public bool isAttacking;
     public bool isDodging;
@@ -69,15 +96,26 @@ public class FighterAI : Agent
     private int inactivityCounter = 0;
     private Vector3 lastPosition;
 
+    // Aggression tracking variables
+    private float timeTooFarApart = 0f;
+    private float lastAttackFrequencyCheck = 0f;
+    private int attacksInTimeWindow = 0;
+
+    // Combat style tracking
+    private int actionsPerformed = 0;
+    private int uniqueActionsThisEpisode = 0;
+    private HashSet<string> actionTypes = new HashSet<string>();
+
     private void Start()
     {
         InitializeStats();
         lastPosition = transform.position;
+        lastAttackFrequencyCheck = Time.time;
     }
 
     private void InitializeStats()
     {
-        if (fighterStats == null) return;
+        /*if (fighterStats == null) return;
 
         attackSpeed = fighterStats.attackSpeed;
         strength = fighterStats.strength;
@@ -92,26 +130,27 @@ public class FighterAI : Agent
             healthSystem.SetMaxHealth(maxHealth);
         }
 
-        SetProperFacingDirection();
+        SetProperFacingDirection();*/
     }
 
     public override void OnEpisodeBegin()
     {
-        // Reset health and state
-        currentHealth = maxHealth;
+        // Reset health with slight randomization for training variety
+        currentHealth = maxHealth * Random.Range(0.95f, 1.0f);
         if (healthSystem != null)
         {
             healthSystem.UpdateHealth(currentHealth);
         }
 
+        // Reset action flags
         isAttacking = false;
         isBlocking = false;
         isDodging = false;
 
-        // Reset timers
-        lastAttackTime = 0f;
-        lastBlockTime = 0f;
-        lastDodgeTime = 0f;
+        // Reset timers with slight randomization
+        lastAttackTime = -Random.Range(0f, attackCooldown * 0.5f);
+        lastBlockTime = -Random.Range(0f, 2.0f);
+        lastDodgeTime = -Random.Range(0f, 2.0f);
 
         // Reset reward tracking
         hasRewardedBlock = false;
@@ -120,13 +159,23 @@ public class FighterAI : Agent
         inactivityCounter = 0;
         lastPosition = transform.position;
 
+        // Reset aggression tracking
+        timeTooFarApart = 0f;
+        lastAttackFrequencyCheck = Time.time;
+        attacksInTimeWindow = 0;
+
+        // Reset action tracking
+        actionsPerformed = 0;
+        uniqueActionsThisEpisode = 0;
+        actionTypes.Clear();
+
         // Ensure proper facing direction
         SetProperFacingDirection();
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // Self state observations (safe from NaN)
+        // Self state observations
         sensor.AddObservation(Mathf.Clamp01(currentHealth / Mathf.Max(maxHealth, 0.01f)));
         sensor.AddObservation(isAttacking ? 1 : 0);
         sensor.AddObservation(isBlocking ? 1 : 0);
@@ -135,7 +184,7 @@ public class FighterAI : Agent
         // Position and opponent observations
         if (opponent != null)
         {
-            // Distance along X-axis (normalized by arena width)
+            // Distance along X-axis 
             float xDistance = opponent.position.x - transform.position.x;
             float arenaWidth = arenaMaxX - arenaMinX;
             float normalizedXDistance = Mathf.Clamp(xDistance / arenaWidth, -1f, 1f);
@@ -160,11 +209,16 @@ public class FighterAI : Agent
                 sensor.AddObservation(opponentAI.isAttacking ? 1 : 0);
                 sensor.AddObservation(opponentAI.isBlocking ? 1 : 0);
                 sensor.AddObservation(opponentAI.isDodging ? 1 : 0);
+
+                // Health advantage/disadvantage
+                float healthAdvantage = (currentHealth / maxHealth) - (opponentAI.currentHealth / opponentAI.maxHealth);
+                sensor.AddObservation(Mathf.Clamp(healthAdvantage, -1f, 1f));
             }
             else
             {
                 // Default values if opponent AI not found
                 sensor.AddObservation(1.0f);
+                sensor.AddObservation(0);
                 sensor.AddObservation(0);
                 sensor.AddObservation(0);
                 sensor.AddObservation(0);
@@ -181,9 +235,10 @@ public class FighterAI : Agent
             sensor.AddObservation(0);
             sensor.AddObservation(0);
             sensor.AddObservation(0);
+            sensor.AddObservation(0);
         }
 
-        // Cooldown timers (normalized)
+        // Cooldown timers
         float attackCooldownNormalized =
             attackCooldown > 0.001f ? Mathf.Clamp01((Time.time - lastAttackTime) / attackCooldown) : 1f;
         sensor.AddObservation(attackCooldownNormalized);
@@ -210,6 +265,42 @@ public class FighterAI : Agent
         int actionChoice = actionBuffers.DiscreteActions[0];
         int movementChoice = actionBuffers.DiscreteActions[1];
 
+        // Force engagement during early training
+        if (enableForcedEngagement && Academy.Instance.StepCount < forcedEngagementSteps)
+        {
+            if (opponent != null)
+            {
+                float distance = Vector3.Distance(transform.position, opponent.position);
+
+                if (distance <= optimalFightingDistance * 1.5f && Random.value < forcedAttackChance)
+                {
+                    Debug.Log($"Fighter {fighterID} - Attack forced");
+                    actionChoice = 1;
+                }
+
+                // Force approach when too far apart
+                if (distance > optimalFightingDistance * 2f && Random.value < forcedApproachChance)
+                {
+                    Debug.Log($"Fighter {fighterID} - Approach forced");
+                    movementChoice = 1;
+                }
+            }
+        }
+
+        if (Academy.Instance.StepCount < 50000)
+        {
+            if (opponent != null)
+            {
+                float xDistance = Mathf.Abs(transform.position.x - opponent.position.x);
+                if (xDistance < 0.3f)
+                {
+                    float contactReward = 0.2f;
+                    AddReward(contactReward);
+                    Debug.Log($"Contact proximity reward: {contactReward}");
+                }
+            }
+        }
+
         // Handle movement with small exploration reward
         if (movementChoice != 0)
         {
@@ -218,7 +309,7 @@ public class FighterAI : Agent
             // Moving toward opponent when far is good
             if (movementChoice == 1 && !IsInRange())
             {
-                moveReward *= 3f; // Stronger reward for approaching when not in range
+                moveReward *= 3f;
             }
 
             AddReward(moveReward);
@@ -230,10 +321,9 @@ public class FighterAI : Agent
                 MoveAwayFromOpponent();
         }
 
-        // Handle actions
         switch (actionChoice)
         {
-            case 1: // Attack
+            case 1:
                 if (IsInRange())
                 {
                     AddReward(smallActionReward * 2f);
@@ -248,7 +338,7 @@ public class FighterAI : Agent
                 Attack();
                 break;
 
-            case 2: // Block
+            case 2:
                 FighterAI opponentAI = opponent?.GetComponent<FighterAI>();
                 if (opponentAI != null && opponentAI.isAttacking)
                 {
@@ -259,7 +349,7 @@ public class FighterAI : Agent
                 Block();
                 break;
 
-            case 3: // Dodge
+            case 3:
                 Dodge();
                 break;
         }
@@ -268,22 +358,25 @@ public class FighterAI : Agent
         if (opponent != null)
         {
             float xDistance = Mathf.Abs(transform.position.x - opponent.position.x);
-            
-            // Strong reward for being at optimal fighting distance
-            if (xDistance <= optimalFightingDistance * 1.5f && xDistance >= minimumFightingDistance)
+
+            if (xDistance <= optimalFightingDistance * 1.5f && xDistance >= minimumFightingDistance * 0.8f)
             {
                 AddReward(proximityReward);
                 episodeCumulativeReward += proximityReward;
                 Debug.Log($"Fighter {fighterID} at good distance ({xDistance:F2}). Reward: {proximityReward}");
             }
-            
+
             // Significant penalty for being too far away
-            if (xDistance > optimalFightingDistance * 3f)
+            if (xDistance > distanceThreshold)
             {
-                float penalty = distancePenalty * (xDistance / optimalFightingDistance);
+                float penalty = farPenaltyPerSecond * Time.deltaTime;
                 AddReward(-penalty);
                 episodeCumulativeReward -= penalty;
-                Debug.Log($"Fighter {fighterID} too far away ({xDistance:F2}). Penalty: {-penalty:F3}");
+
+                if (Academy.Instance.StepCount % 100 == 0)
+                {
+                    Debug.Log($"Fighter {fighterID} too far away ({xDistance:F2}). Penalty: {-penalty:F3}");
+                }
             }
         }
 
@@ -295,7 +388,7 @@ public class FighterAI : Agent
         if (Vector3.Distance(transform.position, lastPosition) < 0.01f)
         {
             inactivityCounter++;
-            if (inactivityCounter > 10) // Penalize after 10 frames of no movement
+            if (inactivityCounter > 10)
             {
                 float inactivityPenalty = 0.02f;
                 AddReward(-inactivityPenalty);
@@ -308,6 +401,33 @@ public class FighterAI : Agent
             inactivityCounter = 0;
             lastPosition = transform.position;
         }
+    }
+
+    private (int actionChoice, int movementChoice) ForcedEngagement(ActionBuffers actionBuffers)
+    {
+        // Get the original actions
+        int actionChoice = actionBuffers.DiscreteActions[0];
+        int movementChoice = actionBuffers.DiscreteActions[1];
+
+        if (opponent == null) return (actionChoice, movementChoice);
+
+        float distance = Vector3.Distance(transform.position, opponent.position);
+
+        // Force attack at random intervals when in range
+        if (distance <= optimalFightingDistance * 1.5f && Random.value < forcedAttackChance)
+        {
+            Debug.Log($"Fighter {fighterID} - FORCED ATTACK!");
+            actionChoice = 1;
+        }
+
+        // Force approach when too far apart
+        if (distance > optimalFightingDistance * 2f && Random.value < forcedApproachChance)
+        {
+            Debug.Log($"Fighter {fighterID} - FORCED APPROACH!");
+            movementChoice = 1;
+        }
+
+        return (actionChoice, movementChoice);
     }
 
     private void Update()
@@ -330,10 +450,105 @@ public class FighterAI : Agent
 
         // Ensure fighter stays within arena bounds
         EnforceArenaBoundaries();
+
+        if (isMoving)
+        {
+            transform.position = Vector3.SmoothDamp(
+                transform.position,
+                targetPosition,
+                ref currentVelocity,
+                movementSmoothTime
+            );
+
+            // Stop moving when we're very close to target
+            if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
+            {
+                isMoving = false;
+            }
+        }
+
+        // Track and penalize staying too far apart
+        if (opponent != null)
+        {
+            float distance = Vector3.Distance(transform.position, opponent.position);
+
+            if (distance > distanceThreshold)
+            {
+                timeTooFarApart += Time.deltaTime;
+
+                // Apply OCCASIONAL penalty rather than continuous
+                if (timeTooFarApart > 2.0f && timeTooFarApart % 1.0f < Time.deltaTime)
+                {
+                    float farPenalty = farPenaltyPerSecond;
+                    AddReward(-farPenalty);
+                    Debug.Log($"Fighter {fighterID} too far apart. Penalty: {-farPenalty:F3}");
+                }
+            }
+            else
+            {
+                // Reset when they get close enough
+                timeTooFarApart = 0f;
+            }
+        }
+
+        // Track and reward attack frequency
+        if (Time.time - lastAttackFrequencyCheck > attackFrequencyCheckInterval)
+        {
+            // Reward or penalize based on attack frequency
+            float attackRate = attacksInTimeWindow / attackFrequencyCheckInterval;
+
+            if (attackRate < 0.2f)
+            {
+                // Penalize low attack frequency
+                AddReward(-lowAttackRatePenalty);
+                episodeCumulativeReward -= lowAttackRatePenalty;
+                Debug.Log(
+                    $"Fighter {fighterID} not attacking enough ({attacksInTimeWindow} attacks). Penalty: {-lowAttackRatePenalty}");
+            }
+            else if (attackRate > 0.6f)
+            {
+                // Reward high attack frequency
+                AddReward(highAttackRateReward);
+                episodeCumulativeReward += highAttackRateReward;
+                Debug.Log(
+                    $"Fighter {fighterID} showing good aggression ({attacksInTimeWindow} attacks)! Reward: {highAttackRateReward}");
+            }
+
+            // Reset for next interval
+            lastAttackFrequencyCheck = Time.time;
+            attacksInTimeWindow = 0;
+        }
+
+        // Apply push force during early training
+        if (enablePushForce && Academy.Instance.StepCount < pushForceSteps)
+        {
+            ApplyPushForce();
+        }
+
+    }
+
+    private void ApplyPushForce()
+    {
+        if (opponent == null) return;
+
+        float distance = Vector3.Distance(transform.position, opponent.position);
+
+        // Only apply push when fighters are too far apart
+        if (distance > minPushDistance)
+        {
+            // Calculate direction to opponent
+            Vector3 direction = (opponent.position - transform.position).normalized;
+
+            // Apply push force
+            transform.position += direction * pushForceStrength * Time.deltaTime;
+
+            Debug.Log($"Fighter {fighterID} pushed toward opponent. Distance: {distance:F2}");
+        }
     }
 
     private void MaintainPositionOnPlane()
     {
+        // Keep a consistent Z position for 2D plane
         float targetZ = 0f;
 
         if (Mathf.Abs(transform.localPosition.z - targetZ) > 0.1f)
@@ -370,7 +585,7 @@ public class FighterAI : Agent
             Debug.Log($"Fighter {fighterID} hit boundary. Penalty: {-boundaryPenalty}");
         }
     }
-    
+
     private void SetProperFacingDirection()
     {
         if (opponent == null) return;
@@ -378,7 +593,6 @@ public class FighterAI : Agent
         // Determine if this fighter is on the left or right side
         bool isOnLeftSide = transform.position.x < opponent.position.x;
 
-        // Set rotation to face right if on left side, left if on right side
         transform.rotation = Quaternion.Euler(0, isOnLeftSide ? 90 : -90, 0);
     }
 
@@ -386,7 +600,6 @@ public class FighterAI : Agent
     {
         if (opponent == null) return;
 
-        // Determine if this fighter is on the left or right side
         bool isOnLeftSide = transform.position.x < opponent.position.x;
 
         // Only change direction if the fighter has crossed sides
@@ -409,48 +622,72 @@ public class FighterAI : Agent
         else if (Input.GetKey(KeyCode.B))
             discreteActionsOut[0] = 2;
         else if (Input.GetKey(KeyCode.V))
-            discreteActionsOut[0] = 3; 
+            discreteActionsOut[0] = 3;
         else
-            discreteActionsOut[0] = 0; 
+            discreteActionsOut[0] = 0;
 
         // Movement
         if (Input.GetKey(KeyCode.W))
-            discreteActionsOut[1] = 1; 
+            discreteActionsOut[1] = 1;
         else if (Input.GetKey(KeyCode.S))
             discreteActionsOut[1] = 2;
         else
-            discreteActionsOut[1] = 0; 
+            discreteActionsOut[1] = 0;
+    }
+
+    void OnDrawGizmos()
+    {
+        // Draw minimum fighting distance
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, minimumFightingDistance);
+
+        // Draw optimal fighting distance
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, optimalFightingDistance);
     }
 
     private void MoveTowardsOpponent()
     {
-        if (opponent == null) return;
-        
-        // Calculate distance along X-axis
+        /*if (opponent == null) return;
+
+        // Calculate current distance and direction
         float xDistance = Mathf.Abs(transform.position.x - opponent.position.x);
-        
-        // Get movement speed with potential early training boost
+        float xDirection = transform.position.x < opponent.position.x ? 1 : -1;
+
+
+        // Calculate speed with potential early training boost
         float moveSpeed = fighterStats.movementSpeed;
         if (useEarlyTrainingBoost && Academy.Instance.StepCount < earlyTrainingSteps)
         {
             moveSpeed *= earlyMovementBoost;
         }
-        
-        // Only move if we're further than the minimum distance
+
+        // If already at or closer than minimum distance, don't move
         if (xDistance <= minimumFightingDistance)
         {
-            Debug.Log($"Fighter {fighterID} already at fighting distance ({xDistance:F2})");
+            Debug.Log($"Fighter {fighterID} already at minimum distance ({xDistance:F2})");
             return;
         }
-        
-        // Determine direction along X-axis
-        float xDirection = transform.position.x < opponent.position.x ? 1 : -1;
-        
+
+        // Calculate the proposed movement amount based on speed
+        float moveAmount = moveSpeed * Time.deltaTime;
+
+        // Calculate what the new distance would be after movement
+        float newDistance = xDistance - moveAmount;
+
+        // If new distance would be less than minimum, limit the movement amount
+        if (newDistance < minimumFightingDistance)
+        {
+            // Calculate exactly how much we can move while respecting minimum distance
+            moveAmount = xDistance - minimumFightingDistance;
+            Debug.Log($"Fighter {fighterID} - Limited movement to respect minimum distance");
+        }
+
         // Calculate new position
         Vector3 newPosition = transform.position;
-        newPosition.x += xDirection * moveSpeed * Time.deltaTime;
-        
-        // Apply position with boundary check
+        newPosition.x += xDirection * moveAmount;
+
+        // Apply boundary checks
         if (newPosition.x < arenaMinX + boundsCheckBuffer)
         {
             newPosition.x = arenaMinX + boundsCheckBuffer;
@@ -459,44 +696,39 @@ public class FighterAI : Agent
         {
             newPosition.x = arenaMaxX - boundsCheckBuffer;
         }
-        
-        float newDistance = Mathf.Abs(newPosition.x - opponent.position.x);
-        if (newDistance < minimumFightingDistance)
+
+        if (Vector3.Distance(newPosition, transform.position) > movementThreshold)
         {
-            Debug.Log($"Movement would be too close ({newDistance:F2}), adjusting");
-            newPosition.x = opponent.position.x - (minimumFightingDistance * xDirection);
+            targetPosition = newPosition;
+            isMoving = true;
         }
-        
-        transform.position = newPosition;
-        
+
         // Update facing direction
         UpdateFacingDirection();
-        
-        Debug.Log($"Fighter {fighterID} moving toward opponent. Distance: {xDistance:F2} → {Mathf.Abs(transform.position.x - opponent.position.x):F2}");
+
+        float finalDistance = Mathf.Abs(transform.position.x - opponent.position.x);
+        Debug.Log($"Fighter {fighterID} moving toward opponent. Distance: {xDistance:F2} → {finalDistance:F2}");*/
     }
 
     private void MoveAwayFromOpponent()
     {
-        if (opponent == null) return;
-        
-        // Calculate distance along X-axis
+        /*if (opponent == null) return;
+
         float xDistance = Mathf.Abs(transform.position.x - opponent.position.x);
-        
-        // Only retreat to a reasonable distance
+
         float maxRetreatDistance = minimumFightingDistance * 2.0f;
         if (xDistance >= maxRetreatDistance)
         {
             Debug.Log($"Fighter {fighterID} already at max retreat distance ({xDistance:F2})");
             return;
         }
-        
-        // Determine direction 
+
         float xDirection = transform.position.x < opponent.position.x ? -1 : 1;
-        
+
         // Calculate new position
         Vector3 newPosition = transform.position;
         newPosition.x += xDirection * fighterStats.movementSpeed * Time.deltaTime;
-        
+
         // Apply position with boundary check
         if (newPosition.x < arenaMinX + boundsCheckBuffer)
         {
@@ -506,12 +738,12 @@ public class FighterAI : Agent
         {
             newPosition.x = arenaMaxX - boundsCheckBuffer;
         }
-        
+
         transform.position = newPosition;
-        
+
         UpdateFacingDirection();
-        
-        Debug.Log($"Fighter {fighterID} moving away from opponent. Distance: {xDistance:F2} → {Mathf.Abs(transform.position.x - opponent.position.x):F2}");
+
+        Debug.Log($"Fighter {fighterID} moving away from opponent. Distance: {xDistance:F2} → {Mathf.Abs(transform.position.x - opponent.position.x):F2}");*/
     }
 
     private bool IsInRange()
@@ -534,14 +766,22 @@ public class FighterAI : Agent
         matchStats.LogHit(fighterID, (int)strength);
         lastAttackTime = Time.time;
 
-        // Give small reward for attempting attack when in range
+        TrackActionVariety("attack");
+
+        // Increment attack counter for frequency tracking
+        attacksInTimeWindow++;
+
+        // Much higher reward just for attempting attacks
+        float attackReward = attackInitiationReward;
         if (IsInRange())
         {
-            AddReward(0.5f);
-            episodeCumulativeReward += 0.5f;
+            attackReward *= 1.5f;
         }
 
-        Debug.Log($"Fighter {fighterID} is attacking.");
+        AddReward(attackReward);
+        episodeCumulativeReward += attackReward;
+
+        Debug.Log($"Fighter {fighterID} is attacking. Reward: {attackReward}");
     }
 
     public void Block()
@@ -554,23 +794,26 @@ public class FighterAI : Agent
         lastBlockTime = Time.time;
         blockStartTime = Time.time;
         matchStats.LogDefense(fighterID, true);
-        
+
+        TrackActionVariety("block");
+
         hasRewardedBlock = false;
-        
+
         Debug.Log($"Fighter {fighterID} is blocking.");
     }
 
     public void Dodge()
     {
-        // Check if dodge is on cooldown
         if (isDodging || Time.time - lastDodgeTime < 2.0f) return;
 
         isDodging = true;
         animator.SetTrigger("Dodge");
         lastDodgeTime = Time.time;
 
+        TrackActionVariety("dodge");
+
         hasRewardedDodge = false;
-        
+
         Debug.Log($"Fighter {fighterID} dodged.");
     }
 
@@ -637,7 +880,7 @@ public class FighterAI : Agent
         // Take damage
         currentHealth -= damage;
 
-        // Penalty for taking damage 
+        // Reduced penalty for taking damage 
         float damagePenalty = takeDamagePenalty * (damage / maxHealth);
 
         // Less penalty if blocking
@@ -669,8 +912,8 @@ public class FighterAI : Agent
 
     public void SuccessfulHit(float damageDealt)
     {
-        // Base reward for landing a hit
-        float hitReward = successfulHitReward;
+        // Much higher base reward for landing a hit
+        float hitReward = successfulHitReward * successfulHitMultiplier;
 
         // Bonus for high damage hits
         if (damageDealt > 10)
@@ -681,20 +924,39 @@ public class FighterAI : Agent
         AddReward(hitReward);
         episodeCumulativeReward += hitReward;
 
-        Debug.Log($"Fighter {fighterID} landed hit for {damageDealt} damage. Reward: {hitReward}");
+        Debug.Log($"Fighter {fighterID} landed hit for {damageDealt} damage. BIG REWARD: {hitReward}");
+    }
+
+    private void TrackActionVariety(string actionType)
+    {
+        actionsPerformed++;
+        if (!actionTypes.Contains(actionType))
+        {
+            actionTypes.Add(actionType);
+            uniqueActionsThisEpisode++;
+        }
     }
 
     public void CompleteEpisode(bool wasVictorious)
     {
-        // Big reward/penalty for victory/defeat
+        /*// Big reward/penalty for victory/defeat
         float finalReward = wasVictorious ? victoryReward : -defeatPenalty;
 
-        // Add health-based bonus for victory (rewarding dominance)
+        // Add health-based bonus for victory
         if (wasVictorious)
         {
             float healthPercentage = currentHealth / maxHealth;
             float healthBonus = healthPercentage * (victoryReward * 0.2f);
             finalReward += healthBonus;
+        }
+
+        // Reward for combat style variety
+        if (actionsPerformed > 0)
+        {
+            float varietyRatio = (float)uniqueActionsThisEpisode / Mathf.Min(actionsPerformed, 20);
+            float styleReward = varietyRatio * 0.5f;
+            finalReward += styleReward;
+            Debug.Log($"Combat variety bonus: {styleReward:F2} ({uniqueActionsThisEpisode} unique / {actionsPerformed} total)");
         }
 
         AddReward(finalReward);
@@ -709,5 +971,6 @@ public class FighterAI : Agent
 
         // End episode
         EndEpisode();
+    }*/
     }
 }

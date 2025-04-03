@@ -12,13 +12,26 @@ public class CustomizationUI : MonoBehaviour
     public Slider attackCooldownSlider;
     public Slider dodgeRateSlider;
 
-    [SerializeField] private FighterAI fighterAI;
+    [SerializeField] private GameObject fighterObject;
     [SerializeField] private FighterStats baseStats;
     [SerializeField] private CustomizationManager customizationManager;
+    
+    // Component references
+    private FighterStats fighterStats;
+    private FighterHealth fighterHealth;
     
     private float minMultiplier = 0.25f; // 25% of the base value
     private float maxMultiplier = 5.0f; // 500% of the base value
     
+    private void Awake()
+    {
+        // Get component references
+        if (fighterObject != null)
+        {
+            fighterStats = fighterObject.GetComponent<FighterStats>();
+            fighterHealth = fighterObject.GetComponent<FighterHealth>();
+        }
+    }
    
     private void Start()
     {
@@ -40,17 +53,18 @@ public class CustomizationUI : MonoBehaviour
 
     private void InitializeSliders()
     {
-        if (fighterAI == null || fighterAI.fighterStats == null) return;
+        if (fighterStats == null) return;
 
-        FighterStats baseStats = fighterAI.fighterStats;
+        // Use base stats as reference point if provided, otherwise use current stats
+        FighterStats referenceStats = baseStats != null ? baseStats : fighterStats;
         
-        SetSliderValues(healthSlider, fighterAI.maxHealth, baseStats.health);
-        SetSliderValues(strengthSlider, fighterAI.strength, baseStats.strength);
-        SetSliderValues(defenseSlider, fighterAI.defense, baseStats.defense);
-        SetSliderValues(movementSpeedSlider, fighterAI.fighterStats.movementSpeed, baseStats.movementSpeed);
-        SetSliderValues(attackSpeedSlider, fighterAI.attackSpeed, baseStats.attackSpeed);
-        SetSliderValues(attackCooldownSlider, fighterAI.attackCooldown, baseStats.attackCooldown);
-        SetSliderValues(dodgeRateSlider, fighterAI.dodgeRate, baseStats.dodgeRate);
+        SetSliderValues(healthSlider, fighterStats.Health, referenceStats.Health);
+        SetSliderValues(strengthSlider, fighterStats.Strength, referenceStats.Strength);
+        SetSliderValues(defenseSlider, fighterStats.Defense, referenceStats.Defense);
+        SetSliderValues(movementSpeedSlider, fighterStats.MovementSpeed, referenceStats.MovementSpeed);
+        SetSliderValues(attackSpeedSlider, fighterStats.AttackSpeed, referenceStats.AttackSpeed);
+        SetSliderValues(attackCooldownSlider, fighterStats.AttackCooldown, referenceStats.AttackCooldown);
+        SetSliderValues(dodgeRateSlider, fighterStats.DodgeRate, referenceStats.DodgeRate);
     }
     
     private void SetSliderValues(Slider slider, float currentValue, float baseValue)
@@ -63,40 +77,43 @@ public class CustomizationUI : MonoBehaviour
         Debug.Log($"Setting slider values: Min={slider.minValue}, Max={slider.maxValue}, Value={slider.value}");
     }
 
-
     private void UpdateStat(float sliderValue, string statType)
     {
-        if (fighterAI == null || fighterAI.fighterStats == null) return;
-
-        FighterStats baseStats = fighterAI.fighterStats;
-
+        if (fighterStats == null) return;
+        
         switch (statType)
         {
             case "health":
-                fighterAI.maxHealth = sliderValue;
-                fighterAI.currentHealth = Mathf.Clamp(fighterAI.currentHealth, 0, fighterAI.maxHealth);
+                fighterStats.UpdateHealth(sliderValue);
+                if (fighterHealth != null)
+                {
+                    float currentHealth = Mathf.Clamp(fighterHealth.CurrentHealth, 0, sliderValue);
+                    fighterHealth.SetHealth(currentHealth);
+                }
                 break;
             case "strength":
-                fighterAI.strength = sliderValue;
+                fighterStats.UpdateStrength(sliderValue);
                 break;
             case "defense":
-                fighterAI.defense = sliderValue;
+                fighterStats.UpdateDefense(sliderValue);
                 break;
             case "movementSpeed":
-                fighterAI.fighterStats.movementSpeed = sliderValue;
+                fighterStats.UpdateMovementSpeed(sliderValue);
                 break;
             case "attackSpeed":
-                fighterAI.attackSpeed = sliderValue;
+                fighterStats.UpdateAttackSpeed(sliderValue);
                 break;
             case "attackCooldown":
-                fighterAI.attackCooldown = sliderValue;
+                fighterStats.UpdateAttackCooldown(sliderValue);
                 break;
             case "dodgeRate":
-                fighterAI.dodgeRate = sliderValue;
+                fighterStats.UpdateDodgeRate(sliderValue);
                 break;
         }
+        
         if (customizationManager != null)
         {
             customizationManager.SaveCustomization();
-        }    }
+        }
+    }
 }

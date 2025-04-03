@@ -9,14 +9,32 @@ public class FeedBackSystem : MonoBehaviour
     [SerializeField] private TextMeshProUGUI feedbackText;
     private MatchStats matchStats;
     
-    [SerializeField] private FighterAI player;
-    [SerializeField] private FighterAI opponent;
+    [SerializeField] private GameObject playerObject;
+    [SerializeField] private GameObject opponentObject;
+    
+    private FighterStats playerStats;
+    private FighterHealth playerHealth;
+    private FighterStats opponentStats;
+    private FighterHealth opponentHealth;
 
-    [SerializeField] private List<BalanceParameters> balanceParameters = new List<BalanceParameters>();
+    [SerializeField] private List<BalanceParametersSO> balanceParameters = new List<BalanceParametersSO>();
     
     private void Start()
     {
         matchStats = FindObjectOfType<MatchStats>();
+        
+        // Get component references
+        if (playerObject != null)
+        {
+            playerStats = playerObject.GetComponent<FighterStats>();
+            playerHealth = playerObject.GetComponent<FighterHealth>();
+        }
+        
+        if (opponentObject != null)
+        {
+            opponentStats = opponentObject.GetComponent<FighterStats>();
+            opponentHealth = opponentObject.GetComponent<FighterHealth>();
+        }
     }
 
     public void DisplayFeedback()
@@ -33,13 +51,18 @@ public class FeedBackSystem : MonoBehaviour
 
     private string HighlightImbalances()
     {
+        if (playerStats == null || opponentStats == null)
+        {
+            return "Unable to analyze balance: missing fighter components.";
+        }
+        
         Dictionary<string, int> imbalances = new Dictionary<string, int>();
     
         //Loops through all balance parameters and checks for imbalances
         foreach (var balanceParameter in balanceParameters)
         {
-            float playerValue = GetStatValue(player, balanceParameter.statName);
-            float opponentValue = GetStatValue(opponent, balanceParameter.statName);
+            float playerValue = GetStatValue(playerStats, playerHealth, balanceParameter.statName);
+            float opponentValue = GetStatValue(opponentStats, opponentHealth, balanceParameter.statName);
         
             string message;
             if (balanceParameter.CheckImbalance(playerValue, opponentValue, out message))
@@ -58,42 +81,51 @@ public class FeedBackSystem : MonoBehaviour
         return "Stats are well balanced.";
     }
     
-    private float GetStatValue(FighterAI fighter, string statName)
+    private float GetStatValue(FighterStats stats, FighterHealth health, string statName)
     {
+        if (stats == null) return 0f;
+        
         switch (statName.ToLower())
         {
             case "movementspeed":
-                return fighter.fighterStats.movementSpeed;
+                return stats.MovementSpeed;
             case "strength":
-                return fighter.strength;
+                return stats.Strength;
             case "defense":
-                return fighter.defense;
+                return stats.Defense;
             case "dodgerate":
-                return fighter.dodgeRate;
+                return stats.DodgeRate;
             case "attackspeed":
-                return fighter.attackSpeed;
+                return stats.AttackSpeed;
             case "health":
             case "maxhealth":
-                return fighter.maxHealth;
+                return stats.Health;
+            case "currenthealth":
+                return health != null ? health.CurrentHealth : 0f;
             case "attackcooldown":
-                return fighter.fighterStats.attackCooldown;
+                return stats.AttackCooldown;
             default:
-                Debug.Log($"Unknown stat name: {statName}");
+                Debug.LogWarning($"Unknown stat name: {statName}");
                 return 0f;
         }
     }
 
-    public void DisplayCurrentStats(FighterAI fighter)
+    public void DisplayCurrentStats(GameObject fighter)
     {
         if (fighter == null) return;
+        
+        FighterStats stats = fighter.GetComponent<FighterStats>();
+        FighterHealth health = fighter.GetComponent<FighterHealth>();
+        
+        if (stats == null) return;
 
-        string currentStats = $"\nHealth: {fighter.currentHealth}/{fighter.maxHealth}" +
-                              $"\nStrength: {fighter.strength}" +
-                              $"\nDefense: {fighter.defense}" +
-                              $"\nAttack Speed: {fighter.attackSpeed}" +
-                              $"\nMovement Speed: {fighter.fighterStats.movementSpeed}" +
-                              $"\nAttack Cooldown: {fighter.fighterStats.attackCooldown}" +
-                              $"\nDodge Rate: {fighter.dodgeRate}";
+        string currentStats = $"\nHealth: {(health != null ? health.CurrentHealth : 0)}/{stats.Health}" +
+                              $"\nStrength: {stats.Strength}" +
+                              $"\nDefense: {stats.Defense}" +
+                              $"\nAttack Speed: {stats.AttackSpeed}" +
+                              $"\nMovement Speed: {stats.MovementSpeed}" +
+                              $"\nAttack Cooldown: {stats.AttackCooldown}" +
+                              $"\nDodge Rate: {stats.DodgeRate}";
 
         feedbackText.text = currentStats;
     }
@@ -104,6 +136,5 @@ public class FeedBackSystem : MonoBehaviour
         {
             feedbackText.text = string.Empty;
         }
-        
     }
 }

@@ -3,23 +3,24 @@ using System.IO;
 
 public class CustomizationManager : MonoBehaviour
 {
-    [SerializeField] private FighterAI fighterAI;
+   [SerializeField] private FighterStats fighterStats;
+    [SerializeField] private FighterHealth fighterHealth;
 
     private const string SaveFileName = "fighter_customization.json";
 
     public void SaveCustomization()
     {
-        if (fighterAI == null) return;
+        if (fighterStats == null) return;
 
         FighterData fighterData = new FighterData
         {
-            health = fighterAI.maxHealth,
-            strength = fighterAI.strength,
-            defense = fighterAI.defense,
-            movementSpeed = fighterAI.fighterStats.movementSpeed,
-            attackSpeed = fighterAI.attackSpeed,
-            attackCooldown = fighterAI.attackCooldown,
-            dodgeRate = fighterAI.dodgeRate
+            health = fighterStats.Health,
+            strength = fighterStats.Strength,
+            defense = fighterStats.Defense,
+            movementSpeed = fighterStats.MovementSpeed,
+            attackSpeed = fighterStats.AttackSpeed,
+            attackCooldown = fighterStats.AttackCooldown,
+            dodgeRate = fighterStats.DodgeRate
         };
 
         string json = JsonUtility.ToJson(fighterData, true);
@@ -45,16 +46,24 @@ public class CustomizationManager : MonoBehaviour
 
     private void ApplyCustomization(FighterData fighterData)
     {
-        if (fighterAI == null) return;
+        if (fighterStats == null) return;
 
-        fighterAI.maxHealth = fighterData.health;
-        fighterAI.currentHealth = Mathf.Clamp(fighterAI.currentHealth, 0, fighterAI.maxHealth);
-        fighterAI.strength = fighterData.strength;
-        fighterAI.defense = fighterData.defense;
-        fighterAI.fighterStats.movementSpeed = fighterData.movementSpeed;
-        fighterAI.attackSpeed = fighterData.attackSpeed;
-        fighterAI.attackCooldown = fighterData.attackCooldown;
-        fighterAI.dodgeRate = fighterData.dodgeRate;
+        // Update FighterStats component with loaded values
+        fighterStats.UpdateHealth(fighterData.health);
+        fighterStats.UpdateStrength(fighterData.strength);
+        fighterStats.UpdateDefense(fighterData.defense);
+        fighterStats.UpdateMovementSpeed(fighterData.movementSpeed);
+        fighterStats.UpdateAttackSpeed(fighterData.attackSpeed);
+        fighterStats.UpdateAttackCooldown(fighterData.attackCooldown);
+        fighterStats.UpdateDodgeRate(fighterData.dodgeRate);
+        
+        // If we have access to the health component, update its current health too
+        if (fighterHealth != null)
+        {
+            // Ensure current health doesn't exceed maximum health
+            float currentHealth = Mathf.Min(fighterHealth.CurrentHealth, fighterData.health);
+            fighterHealth.SetHealth(currentHealth);
+        }
     }
 
     [System.Serializable]

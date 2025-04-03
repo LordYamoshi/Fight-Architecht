@@ -1,25 +1,29 @@
 using System.Collections;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.MLAgents;
 using TMPro;
 
-
 public class TrainingManager : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private MatchManager matchManager;
-    [SerializeField] private FighterAI playerAgent;
-    [SerializeField] private FighterAI opponentAgent;
+    [SerializeField] private GameObject playerObject;
+    [SerializeField] private GameObject opponentObject;
     [SerializeField] private TextMeshProUGUI episodeText;
+    
+    private FighterAgent playerAgent;
+    private FighterAgent opponentAgent;
     
     [Header("Training Settings")]
     [SerializeField] private float maxEpisodeLength = 60f;
     [SerializeField] private float episodeResetDelay = 0.5f;
     [SerializeField] private float trainingTimeScale = 1.0f;
     [SerializeField] private bool showDebugLogs = true;
-    
-    // Internal tracking variables
+    [SerializeField] private int statsRecordingInterval = 100;
+    [SerializeField] private float stuckCheckInterval = 5f;
+
     private float episodeTimer = 0f;
     private int episodeCount = 1;
     private bool isResetting = false;
@@ -28,19 +32,32 @@ public class TrainingManager : MonoBehaviour
     private Vector3 lastOpponentPosition;
     private float stuckCheckTimer = 0f;
     private StatsRecorder statsRecorder;
+    private StringBuilder logBuilder = new StringBuilder(256);
+    
+    private string episodeDisplayCache = string.Empty;
+    
+    
+    
+    private void Awake()
+    {
+        if (playerObject != null)
+            playerAgent = playerObject.GetComponent<FighterAgent>();
+            
+        if (opponentObject != null)
+            opponentAgent = opponentObject.GetComponent<FighterAgent>();
+            
+        statsRecorder = Academy.Instance.StatsRecorder;
+    }
+    
     
     private void Start()
     {
-        // Set appropriate time scale for training
         Time.timeScale = trainingTimeScale;
-        LogMessage($"Training started with Time.timeScale = {Time.timeScale}");
-        
-        // Get the stats recorder for custom metrics
-        statsRecorder = Academy.Instance.StatsRecorder;
+        LogMessage("Training started with Time.timeScale = " + trainingTimeScale);
         
         // Initialize position tracking
-        if (playerAgent != null) lastPlayerPosition = playerAgent.transform.position;
-        if (opponentAgent != null) lastOpponentPosition = opponentAgent.transform.position;
+        if (playerObject != null) lastPlayerPosition = playerObject.transform.position;
+        if (opponentObject != null) lastOpponentPosition = opponentObject.transform.position;
         
         // Tell match manager we're in training mode
         if (matchManager != null)
@@ -54,22 +71,24 @@ public class TrainingManager : MonoBehaviour
     {
         if (isResetting) return;
         
-        // Update episode timer
         episodeTimer += Time.deltaTime;
         
-        // Update the display
-        UpdateEpisodeDisplay();
+        // Only update UI every few frames
+        if (Time.frameCount % 5 == 0)
+        {
+            UpdateEpisodeDisplay();
+        }
         
-        // Record custom stats for TensorBoard
-        if (statsRecorder != null && Time.frameCount % 100 == 0)
+        // Record custom stats for TensorBoard less frequently
+        if (statsRecorder != null && Time.frameCount % statsRecordingInterval == 0)
         {
             statsRecorder.Add("TrainingManager/Episode", episodeCount);
             statsRecorder.Add("TrainingManager/EpisodeTime", episodeTimer);
         }
         
-        // Check for stuck fighters every 5 seconds
+        // Check for stuck fighters less frequently
         stuckCheckTimer += Time.deltaTime;
-        if (stuckCheckTimer >= 5f)
+        if (stuckCheckTimer >= stuckCheckInterval)
         {
             CheckForStuckFighters();
             stuckCheckTimer = 0f;
@@ -78,7 +97,7 @@ public class TrainingManager : MonoBehaviour
         // Force end episode if it exceeds maximum length
         if (episodeTimer >= maxEpisodeLength)
         {
-            LogMessage($"Episode {episodeCount} force ended after timeout ({maxEpisodeLength} seconds)");
+            LogMessage("Episode " + episodeCount + " force ended after timeout (" + maxEpisodeLength + " seconds)");
             ForceEndEpisode();
             return;
         }
@@ -86,50 +105,52 @@ public class TrainingManager : MonoBehaviour
         // Check if match has ended naturally
         if (matchManager != null && !matchManager.isMatchRunning() && episodeTimer > 1.0f)
         {
-            LogMessage($"Episode {episodeCount} ended naturally after {episodeTimer:F2} seconds");
+            LogMessage("Episode " + episodeCount + " ended naturally after " + episodeTimer.ToString("F2") + " seconds");
             StartCoroutine(StartNewEpisodeDelayed());
         }
     }
-    
 
+    
     private void UpdateEpisodeDisplay()
     {
         if (episodeText != null)
         {
-            episodeText.text = $"EPISODE: {episodeCount}\nTIME: {episodeTimer:F2}";
+            episodeDisplayCache = "EPISODE: " + episodeCount + "\nTIME: " + episodeTimer.ToString("F2");
+            episodeText.text = episodeDisplayCache;
         }
     }
-    
 
     private void CheckForStuckFighters()
     {
         bool fightersStuck = false;
         
         // Check if player is stuck
-        if (playerAgent != null)
+        if (playerObject != null)
         {
-            if (Vector3.Distance(playerAgent.transform.position, lastPlayerPosition) < 0.01f)
+            Transform playerTransform = playerObject.transform;
+            if (Vector3.SqrMagnitude(playerTransform.position - lastPlayerPosition) < 0.0001f) // Use SqrMagnitude instead of Distance
             {
                 stuckCounter++;
                 fightersStuck = true;
             }
             else
             {
-                lastPlayerPosition = playerAgent.transform.position;
+                lastPlayerPosition = playerTransform.position;
             }
         }
         
-        // Check if opponent is stuck
-        if (opponentAgent != null)
+        // Check if opponent is stuck 
+        if (opponentObject != null)
         {
-            if (Vector3.Distance(opponentAgent.transform.position, lastOpponentPosition) < 0.01f)
+            Transform opponentTransform = opponentObject.transform;
+            if (Vector3.SqrMagnitude(opponentTransform.position - lastOpponentPosition) < 0.0001f) // Use SqrMagnitude instead of Distance
             {
                 stuckCounter++;
                 fightersStuck = true;
             }
             else
             {
-                lastOpponentPosition = opponentAgent.transform.position;
+                lastOpponentPosition = opponentTransform.position;
             }
         }
         
@@ -148,6 +169,8 @@ public class TrainingManager : MonoBehaviour
 
     private void ForceEndEpisode()
     {
+        if (isResetting) return;
+        
         if (matchManager != null && matchManager.isMatchRunning())
         {
             matchManager.EndMatch();
@@ -171,6 +194,8 @@ public class TrainingManager : MonoBehaviour
     
     private IEnumerator StartNewEpisodeDelayed()
     {
+        if (isResetting) yield break; 
+        
         isResetting = true;
         
         // Wait a short period to ensure all processes complete
@@ -182,8 +207,8 @@ public class TrainingManager : MonoBehaviour
         stuckCounter = 0;
         
         // Reset positions
-        if (playerAgent != null) lastPlayerPosition = playerAgent.transform.position;
-        if (opponentAgent != null) lastOpponentPosition = opponentAgent.transform.position;
+        if (playerObject != null) lastPlayerPosition = playerObject.transform.position;
+        if (opponentObject != null) lastOpponentPosition = opponentObject.transform.position;
         
         // Reset match state
         if (matchManager != null)
@@ -192,11 +217,10 @@ public class TrainingManager : MonoBehaviour
             matchManager.StartMatch();
         }
         
-        LogMessage($"Started Episode {episodeCount}");
+        LogMessage("Started Episode " + episodeCount);
         isResetting = false;
     }
     
-
     private void StartNewEpisode()
     {
         episodeTimer = 0f;
@@ -215,16 +239,16 @@ public class TrainingManager : MonoBehaviour
             matchManager.StartMatch();
         }
         
-        LogMessage($"Started Episode {episodeCount}");
+        LogMessage("Started Episode " + episodeCount);
     }
     
-
-    public void NotifyEpisodeComplete(FighterAI agent)
+    public void NotifyEpisodeComplete(FighterAgent agent)
     {
         // If we're not already resetting, start a new episode
         if (!isResetting && matchManager != null && matchManager.isMatchRunning())
         {
-            LogMessage($"Agent '{agent.name}' completed episode {episodeCount} after {episodeTimer:F2} seconds");
+            string agentName = agent != null ? agent.name : "Unknown";
+            LogMessage("Agent '" + agentName + "' completed episode " + episodeCount + " after " + episodeTimer.ToString("F2") + " seconds");
             StartCoroutine(StartNewEpisodeDelayed());
         }
     }
@@ -233,7 +257,10 @@ public class TrainingManager : MonoBehaviour
     {
         if (!showDebugLogs) return;
         
-        string formattedMsg = $"[TrainingManager] {message}";
+        logBuilder.Length = 0;
+        logBuilder.Append("[TrainingManager] ");
+        logBuilder.Append(message);
+        string formattedMsg = logBuilder.ToString();
         
         switch (logType)
         {

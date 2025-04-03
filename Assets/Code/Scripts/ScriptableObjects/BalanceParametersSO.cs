@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "BalanceParameters", menuName = "Game/BalanceParameters")]
-public class BalanceParameters : ScriptableObject
+public class BalanceParametersSO : ScriptableObject
 {
     public enum ComparisonType
     {

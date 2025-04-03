@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "FighterStats", menuName = "Data/FighterStats")]
-public class FighterStats : ScriptableObject
+public class FighterStatsSO : ScriptableObject
 {
     public float strength;
     public float attackSpeed;

@@ -509,7 +509,7 @@ MonoBehaviour:
   arenaMaxX: 5
   boundsCheckBuffer: 0.2
   minimumFightingDistance: 1.5
-  optimalFightingDistance: 1
+  optimalFightingDistance: 0.2
   successfulHitReward: 0.5
   successfulBlockReward: 0.2
   successfulDodgeReward: 0.3
@@ -519,7 +519,21 @@ MonoBehaviour:
   defeatPenalty: 0.5
   smallActionReward: 0.01
   proximityReward: 0.05
-  distancePenalty: 0.03
+  attackInitiationReward: 0.15
+  successfulHitMultiplier: 2
+  distanceThreshold: 2.5
+  farPenaltyPerSecond: 0.5
+  attackFrequencyCheckInterval: 5
+  lowAttackRatePenalty: 0.1
+  highAttackRateReward: 0.15
+  enableForcedEngagement: 1
+  forcedEngagementSteps: 100000
+  forcedAttackChance: 0.1
+  forcedApproachChance: 0.3
+  enablePushForce: 0
+  pushForceSteps: 50000
+  pushForceStrength: 2
+  minPushDistance: 3
   useEarlyTrainingBoost: 1
   earlyTrainingSteps: 50000
   earlyMovementBoost: 1.5
@@ -588,7 +602,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 17
+    VectorObservationSize: 18
     NumStackedVectorObservations: 4
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -10220,7 +10234,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1785096369}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 06f6a663d9f4b244ebe935b205cb78d0, type: 3}
   m_Name: 
@@ -11563,6 +11577,7 @@ MonoBehaviour:
   matchDuration: 60
   startButton: {fileID: 1465804330}
   isInTrainingMode: 0
+  initialFighterDistance: 2.5
 --- !u!4 &2103793169
 Transform:
   m_ObjectHideFlags: 0
@@ -14284,7 +14299,7 @@ MonoBehaviour:
   arenaMaxX: 5
   boundsCheckBuffer: 0.2
   minimumFightingDistance: 1.5
-  optimalFightingDistance: 1
+  optimalFightingDistance: 0.2
   successfulHitReward: 0.5
   successfulBlockReward: 0.2
   successfulDodgeReward: 0.3
@@ -14294,7 +14309,21 @@ MonoBehaviour:
   defeatPenalty: 0.5
   smallActionReward: 0.01
   proximityReward: 0.05
-  distancePenalty: 0.03
+  attackInitiationReward: 0.15
+  successfulHitMultiplier: 2
+  distanceThreshold: 2.5
+  farPenaltyPerSecond: 0.5
+  attackFrequencyCheckInterval: 5
+  lowAttackRatePenalty: 0.1
+  highAttackRateReward: 0.15
+  enableForcedEngagement: 1
+  forcedEngagementSteps: 100000
+  forcedAttackChance: 0.1
+  forcedApproachChance: 0.3
+  enablePushForce: 0
+  pushForceSteps: 50000
+  pushForceStrength: 2
+  minPushDistance: 3
   useEarlyTrainingBoost: 1
   earlyTrainingSteps: 50000
   earlyMovementBoost: 1.5
@@ -14336,7 +14365,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 17
+    VectorObservationSize: 18
     NumStackedVectorObservations: 4
     m_ActionSpec:
       m_NumContinuousActions: 0
